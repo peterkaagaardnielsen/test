@@ -1,0 +1,27 @@
+Configuration options in config_oal_os.h
+
+Events
+------
+No rules.
+
+
+Mutexes
+-------
+No rules.
+
+
+Tasks
+-----
+No rules.
+
+
+ISR
+---
+Platform ISR is used.
+The implementation depends on the target microcontroller.			
+
+
+TICKS
+-----
+OAL_TICK_RATE		- as the uVelosity timer is manually configured at startup the
+			  tick rate needs to be specified in ms.

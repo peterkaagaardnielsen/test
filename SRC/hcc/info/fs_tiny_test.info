@@ -1,0 +1,6 @@
+Name: fs_tiny_test
+Version: 1.01
+Release: 1
+Category: Package
+Depends: fs_tiny
+Description: Test suite for TINY file system.

@@ -1,0 +1,7 @@
+1.1:
+	- '.' and '..' tests for f_findfirst/f_findnext added
+
+	- f_ftruncate test added
+
+1.0:
+	- Initial release

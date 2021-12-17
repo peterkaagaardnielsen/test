@@ -1,0 +1,8 @@
+Name: fs_tiny
+Version: 3.02
+Release: 1
+Category: Package
+Depends: psp_template_base
+fs_tiny_drv_ram
+(oal_base:in case RTOS is used)
+Description: TINY base file system.

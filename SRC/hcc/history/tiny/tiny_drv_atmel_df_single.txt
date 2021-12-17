@@ -1,0 +1,12 @@
+1.3:
+	- copy function doesn't writes back destination page immediately.
+	  This fix was required to ensure safety in the file system.
+
+1.2:
+	- Adapted to psp_spi template major version 2.
+
+1.1:
+	- TINY minor version check removed from flashset.h
+
+1.0:
+	- Initial release

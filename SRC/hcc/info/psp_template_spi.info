@@ -1,0 +1,6 @@
+Name: psp_template_spi
+Version: 2.03
+Release: 3
+Category: Package
+Depends: psp_template_base
+Description: SPI driver template.

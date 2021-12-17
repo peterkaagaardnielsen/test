@@ -1,0 +1,448 @@
+OAL - OS Abstraction Layer
+--------------------------
+
+  Structure
+  ---------
+    config/config_oal_*.h	- configuration file
+
+    version/ver_oal.h		- version information
+  
+    oal/oal_*.h				- only these header files needs to be included 
+               				  by the modules and these should never be changed
+               				  when doing a new OS port.
+
+    os/oalp_*.c	
+    os/oalp_*.h				- these files contains the OS port of the oal functions
+							  and types
+
+  Configuration
+  -------------
+    config/config_oal.h
+    -------------------
+      Defines which components of the OS abstraction layer are included.
+      Different packages may require different components, in order to
+      avoid including needless elements every package contains its
+      config_oal.h file. If multiple packages are included then the
+      options in the files needs to be ored.
+
+      OAL_TASK_SUPPORTED
+        Enables/disables the support of task creation/deletion
+        
+      OAL_TASK_GET_ID_SUPPORTED
+        Enables/disables the support of oal_task_get_id function
+
+      OAL_TASK_SLEEP_SUPPORTED
+        Enables/disables the support of oal_task_sleep function
+        
+      OAL_MUTEX_SUPPORTED
+        Enables/disables the support of mutexes
+        
+      OAL_EVENT_SUPPORTED
+        Enables/disables the support of events
+        
+      OAL_ISR_SUPPORTED
+        Enables/disables the support of interrupts
+      
+
+
+    
+    config/config_oal_os.h
+    ----------------------
+      Contains values that may be changed by the user depending on the
+      products, their setup and the system design.
+      This configuration is OS dependent therefore oal_base package doesn't
+      contains this file and should be present in the specific OS port.
+    
+      /* maximum number of mutexes */
+      /* NOTE: this option may not be required if oal_mutex_t will statically */
+      /* allocate space for the mutex */
+      #define OAL_MUTEX_COUNT			16
+      
+      /* maximum number of events */
+      /* NOTE: this option may not be required if oal_event_t will statically */
+      /* allocate space for the event */
+      #define OAL_EVENT_COUNT			16
+      
+      /* priorities */
+      #define OAL_HIGHEST_PRIORITY	5
+      #define OAL_HIGH_PRIORITY		10
+      #define OAL_NORMAL_PRIORITY		15
+      #define OAL_LOW_PRIORITY		20
+      #define OAL_LOWEST_PRIORITY		25
+      
+      /* Event flag to use for user tasks invoking internal functions. */
+      /* E.g.: One task calls an internal function that needs to wait for an event */
+      /* NOTE: The value of this flag should be > 0x80 because lower bits */
+      /* might be used by internal tasks */
+      #define OAL_EVENT_FLAG			0x100
+      
+      /* maximum number of tasks */
+      /* NOTE: this option is required if an OS has any parameter that needs to */
+      /* be predefined in order to create a task, in this case this parameter */
+      /* can define the amount of required entities */
+      /*#define OAL_TASK_COUNT			8*/
+      
+      /* no. of max. interrupt sources */
+      /* NOTE: this is optional and the presence of it depends on the OS. If */
+      /* for example there is a need of a wrapper function for every ISR then */
+      /* they have to be prewritten somewhere as a consequence this option */
+      /* needs to be defined */
+      /*#define OAL_ISR_COUNT			4*/
+
+ 
+    oal/os/oalp_defs.h
+    ------------------
+      All RTOS ports needs to have this file with the following definitions:
+      
+      /* tasks are polled - only set with no OS */
+      #define OAL_TASK_POLL_MODE		0
+      
+      /* preemptive system */
+      #define OAL_PREEMPTIVE			1
+      
+      /* stack of a task needs to be allocated statically */
+      #define OAL_STATIC_TASK_STACK	0
+      
+      /* allow interrupts - can only be unset if no OS */
+      /* In case of no OS this option is in the config_oal.h */
+      /* since the user can decide the need of it */
+      #define OAL_INTERRUPT_ENABLE	1
+      
+      /* use platform ISR routines */
+      #define OAL_USE_PLATFORM_ISR	1
+      
+      /* tick rate in ms */
+      /* if it varies depending on the port or platform or there is no */
+      /* variable in the RTOS to obtain this value then it has to be in */
+      /* config_oal.h. */ 
+      #define OAL_TICK_RATE			10
+
+  Events
+  ------
+
+    Purpose of OAL_EVENT_FLAG
+    -------------------------
+      If an RTOS waits for a flag in a statically allocated event then the value of
+      this is irrelevant.
+      
+      If a task needs to wait for an event flag in its dedicated event group then
+      only flags below OAL_EVENT_FLAG can be used for internal purposes.
+      In this case there are 2 possibilities:
+      1) User task -> HCC function -> event wait(OAL_EVENT_FLAG) -> return to user function
+      2) HCC task -> waits for an internal event -> event received -> HCC function ->
+         event_wait(OAL_EVENT_FLAG) -> return to HCC task
+      
+
+    Files
+    -----
+    
+      oal/os/oalp_event.h
+      -------------------
+        typedef uint32_t oal_event_t;
+      			Defines the type of the event. There are 2 type of RTOS, in one case
+      			the event has a specific type and the task is waiting for a flag in
+      			this event, in the other case the RTOS will send an event to the specific
+      			task (without the need of a global event). In the 2nd case type of oal_event_t
+      			is not important but should be defined for compatibility reasons and
+      			oal_event_crate function probably needs to do nothing.
+      			
+        typedef uint16_t oal_event_flags_t;
+        		Type of the event flag.
+
+        typedef uint32_t oal_event_timeout_t;
+        		Type of the timeout used when wating for an event
+        
+        #define OAL_WAIT_FOREVER	(oal_event_timeout_t)-1
+        		Value indicating endless wait for an event
+
+        
+      oal/os/oalp_event.c
+      -------------------
+        Contains the actual port of the functions.
+
+    
+      oal/oal_event.h
+      ----------------
+        int oal_event_create(oal_event_t *p_event);
+        		Creates/Initializes an event.
+        		p_event - pointer to the event
+        
+        int oal_event_delete(oal_event_t *p_event);
+        		Deletes an event.
+        		p_event - pointer to the event
+        
+        int oal_event_get(oal_event_t *p_event, oal_event_flags_t wflags, 
+                          oal_event_flags_t *sflags, oal_event_timeout_t timeout);
+        		Wait for an event.
+        		p_event - pointer to the event
+        		wflags  - flags to wait for (multiple flags are allowed)
+        		sflags  - flags set if the event was obtained
+        		timeout - time to wait for an event in ms (OAL_WAIT_FOREVER/other)
+                          
+        int oal_event_set(oal_event_t *p_event, oal_event_flags_t flags, 
+                          oal_task_id_t task_id);
+        int oal_event_set_int(oal_event_t *p_event, oal_event_flags_t flags,
+                              oal_task_id_t task_id);
+        		Set an event from non-interrupt/interrupt.
+        		p_event - pointer to the event
+        		flags   - event flags to set
+        		task_id - destination task ID
+
+
+
+  Mutexes
+  -------
+
+    Files
+    -----
+      oal/os/oalp_mutex.h
+      -------------------
+        typedef uint32_t oal_mutex_t;
+        	Type of the mutex
+      
+      oal/os/oalp_mutex.c
+      -------------------
+        Contains the actual port of the functions.
+
+      oal/oal_mutex.h
+      ---------------
+        int oal_mutex_create(oal_mutex_t *p_mutex);
+        int oal_mutex_delete(oal_mutex_t *p_mutex);
+        int oal_mutex_get(oal_mutex_t *p_mutex);
+        int oal_mutex_put(oal_mutex_t *p_mutex);
+        	Create/delete/get/put a mutex
+        	p_mutex - pointer to the mutex
+              
+
+  Tasks
+  -----
+  
+    Tasks should be created from the module using it. In some cases tasks
+    can not be dynamically created, if this happens then information on the 
+    required tasks should be obtained from the manual, however all functions 
+    below should be present for compatibility reasons.
+    All tasks must be defined the following way:
+    	In .c file:
+    		OAL_TASK_FN(my_task)
+    		{
+    		  int my_var;
+    		  
+    		  OAL_TASK_PRE;
+    		}
+
+    	In .h file:
+    		OAL_TASK_FN(my_task);
+
+    Files
+    -----
+    
+      oal/oal_task.h
+      --------------
+        typedef OAL_TASK_FN(*oal_task_fn_t);
+        	Task function type definition.
+        
+        typedef struct {
+          const char *name;
+          oal_task_fn_t entry;
+          uint32_t priority;
+          uint32_t stack_size;
+        #if OAL_STATIC_TASK_STACK
+          uint8_t *stack_ptr;
+        #endif
+        } oal_task_dsc_t;
+        	Every task must have a task decriptor block with the following
+        	entries:
+        		name       - name of the task
+        		entry      - entry point
+        		priority   - task priority
+        		stack_size - stack size
+        		stack_ptr  - pointer to the stack, this needs to be present only
+        		             if the OS needs to have it statically allocated.
+        
+        int oal_task_create (const oal_task_dsc_t *task_dsc, oal_task_id_t *task_id);
+        	Create a task. When tasks can't be created dynamically it will
+        	search for the task described in task_dsc and set task_id.
+        		task_dsc   - task descriptor
+        		task_id    - outputs the task ID
+        		Return: OAL_*
+        
+        int oal_task_delete (oal_task_id_t task_id);
+        	Deletes a task
+        		task_id - ID of the task to delete
+        		
+        oal_task_id_t oal_task_get_id (void);
+        	Gets the ID of the currently active task.
+        		Return: task ID
+
+        #if OAL_TASK_POLL_MODE
+        #define oal_task_sleep		psp_sleep
+        #else
+        void oal_task_sleep (uint32_t ms);
+        #endif
+        	Delays the system for 'ms' milliseconds. If the system runs in polled
+        	mode the user needs to write a function that delays the required amount
+        	of time (e.g. using a timer - for USB host there is a prewritten sleep
+        	routine for controllers where frame counter runs even with no device
+        	connected).
+      
+      oal/os/oalp_task.h
+      ------------------
+        typedef uint32_t oal_task_id_t;
+        	Type of the task ID.
+
+        #define OAL_TASK_FN(fn)		void (fn) (void)
+        	Defines the function type for the specific RTOS.
+        	
+        #define OAL_TASK_PRE
+        	Must be written to all tasks as the first instruction after possible
+        	variable declarations. If for example there is a parameter for the
+        	task then OAL_TASK_PRE must be defined to (void)param to avoid possible
+        	warnings. E.g.:
+        		#define OAL_TASK_FN(fn)		void (fn) (unsigned long param)
+        		#define OAL_TASK_PRE		(void)param
+
+        If non-OS port is used the following function is present:
+        	void oal_task_poll (void);
+        	This function will poll all the registered task. This means 
+        	user idle loop should only call this function without the knowledge
+        	of the tasks required by the modules.
+        	NOTE: this function should not be called (or very carefully) from
+        	      HCC internal functions since the system can very easily
+        	      end up in recursive calls. The safe way to do it is to only
+        	      call the required task from the internal function (if needed).
+        
+      
+      oal/os/oalp_task.c
+      ------------------
+        Contains the actual port of the functions.
+  
+
+  ISR
+  ---
+    Depending on the RTOS ISR functions may be platform specific or RTOS specific.
+    Some provides possibility to create an ISR invoking RTOS calls in this case
+    OAL_USE_PLATFORM_ISR needs to be set to 0 otherwise to 1.
+   	All ISR functions in every code should be defined the following way
+
+	   	In .c files: 
+		    OAL_ISR_FN(my_isr)
+		    {
+		      OAL_ISR_PRE;
+		      ...
+		      my code
+		      ...
+		      OAL_ISR_POST;
+	    	}
+
+	    In .h files:
+	    	OAL_ISR_FN(my_isr);
+
+    Files
+    -----
+      oal/oal_isr.h
+      -------------
+        #if OAL_USE_PLATFORM_ISR
+        #define OAL_ISR_FN			PSP_ISR_FN
+        #endif
+        typedef OAL_ISR_FN(*oal_isr_fn_t);
+        	ISR function defintion.
+        	
+        typedef struct {
+          uint32_t id;
+          uint32_t pri;
+          oal_isr_fn_t fn;
+        } oal_isr_dsc_t;
+        	All ISR should have an ISR descriptor:
+        		id   - ID of the ISR, this can be set to anything
+        		       and used by oal_isr_install or psp_isr_install.
+        		       It can be a vector number an identifier, etc.
+        		pri  - priority (might not be always required)
+        		fn   - ISR function
+        
+        
+        #if OAL_USE_PLATFORM_ISR
+        	See optional files below for details and psp_*/PSP_* for
+        	description.
+        
+        #define oal_isr_id_t		psp_isr_id_t
+        
+        #define OAL_ISR_PRE			PSP_ISR_PRE
+        #define OAL_ISR_POST		PSP_ISR_POST
+        
+        int psp_isr_install (const oal_isr_dsc_t *isr_dsc, oal_isr_id_t *isr_id);
+        int psp_isr_enable (oal_isr_id_t isr_id);
+        int psp_isr_disable (oal_isr_id_t isr_id);
+        int psp_isr_delete (oal_isr_id_t isr_id);
+        
+        int psp_int_enable (void);
+        int psp_int_disable (void);
+        
+        #define oal_isr_install		psp_isr_install
+        #define oal_isr_enable		psp_isr_enable
+        #define oal_isr_disable		psp_isr_disable
+        #define oal_isr_delete		psp_isr_delete
+        
+        #define oal_int_enable		psp_int_enable
+        #define oal_int_disable		psp_int_disable
+        
+        #else
+        
+        int oal_isr_install (const oal_isr_dsc_t *isr_dsc, oal_isr_id_t *isr_id);
+        	Install ISR handler. 
+        		isr_dsc - ISR descriptor
+        		isr_id  - outputs the ID of the ISR
+        		Return: OAL_*
+        
+        int oal_isr_enable (oal_isr_id_t isr_id);
+        	Enable ISR.
+        		isr_id - ID of the ISR to enable.
+        	
+        int oal_isr_disable (oal_isr_id_t isr_id);
+        	Disable ISR.
+        		isr_id - ID of the ISR to disable.
+        		
+        int oal_isr_delete (oal_isr_id_t isr_id);
+         	Delete ISR.
+        		isr_id - ID of the ISR to delete.
+        
+        int oal_int_enable (void);
+        int oal_int_disable (void);
+        	Enable/Disable global interrupts.
+        
+        #endif
+      
+      oal/os/oalp_isr.h
+      -----------------
+        typedef uint32_t oal_isr_id_t;
+        	ISR identifier. It is used to refer to the ISR after creating it.
+        
+        #define OAL_ISR_FN(fn)		void fn (void)
+        	Definition of the ISR function. 
+        	
+        #define OAL_ISR_PRE			
+        	Code to execute at the beginning of the ISR.
+
+        #define OAL_ISR_POST
+        	Code to execute at the end of the ISR.
+        	  
+        
+      oal/os/oalp_isr.c
+      -----------------
+        Contains the actual port of the functions.
+
+
+    Optional files
+    --------------
+    
+      psp/target/isr/psp_isr.h
+      psp/target/isr/psp_isr.c
+      -------------------------
+        If OAL_USE_PLATFORM_ISR is set then this should contain everything
+        defined in oalp_isr.h and oalp_isr.c. Please note that all oal_/OAL_
+        prefixes should psp_/PSP_.
+        If OAL_USE_PLATFORM_ISR is not set the this modules can still be present
+        and can provide platform specific information to oal_isr module.
+        E.g.: if the vector number and priority can only be obtained with some
+        additional steps based on oal_isr_dsc_t->id then helper functions can
+        be put here. (See OSE port as an example).
+

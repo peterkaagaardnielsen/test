@@ -1,0 +1,6 @@
+Name: psp_template_uart
+Version: 2.00
+Release: 2
+Category: Package
+Depends: psp_template_base
+Description: UART driver template.

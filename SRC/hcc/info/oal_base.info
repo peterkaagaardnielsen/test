@@ -1,0 +1,7 @@
+Name: oal_base
+Version: 2.01
+Release: 2
+Category: Package
+Depends: psp_template_base
+oal_os_*
+Description: OS Abstraction Layer base package

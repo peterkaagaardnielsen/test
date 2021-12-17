@@ -1,0 +1,6 @@
+Name: hcc_base_doc
+Version: 1.00
+Release: 1
+Category: Package
+Depends:
+Description: HCC base documentation, includes the "Firmware Quick Start Guide" and the "Source Tree Guide".

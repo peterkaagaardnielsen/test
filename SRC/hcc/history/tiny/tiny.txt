@@ -1,0 +1,18 @@
+3.2:
+	- '.' and '..' reported by f_findfirst/f_findnext
+
+	- f_ftruncate function added
+
+	- QUICK_FILE_SEARCH option fixed. Incorrect case sensitivity was applied
+	  if F_CHECKNAME option was enabled as well.
+
+3.1:
+	- f_getversion() function removed.
+
+	- Under some conditions the system could incorrectly open ".." as a 
+	  file from a top level directory.
+
+	- warining reomved from fn_seek
+
+3.0:
+	- Initial release

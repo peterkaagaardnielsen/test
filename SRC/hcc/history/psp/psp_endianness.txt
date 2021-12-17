@@ -1,0 +1,5 @@
+1.2:
+	- value typecasted to uint32_t or uint16_t in PSP_WR_... macros
+
+1.1:
+	- initial release

@@ -1,0 +1,11 @@
+1.4:
+	- psp_memmove added
+
+1.3:
+	- all paramaters enclosed
+
+1.2:
+	- psp_strncat added
+
+1.1:
+	- initial release 

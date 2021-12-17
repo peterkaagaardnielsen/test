@@ -1,0 +1,6 @@
+Name: psp_template_base
+Version: 1.00
+Release: 3
+Category: Package
+Depends: 
+Description: Base Platform Support Package. This base package is required for all existing products.

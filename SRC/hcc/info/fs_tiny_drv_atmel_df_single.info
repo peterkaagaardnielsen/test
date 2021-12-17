@@ -1,0 +1,7 @@
+Name: fs_tiny_drv_atmel_df_single
+Version: 1.03
+Release: 1
+Category: Package
+Depends: fs_tiny
+psp_template_spi
+Description: DataFLASH driver for TINY file system. Use this package if one DF chip needs to be used.

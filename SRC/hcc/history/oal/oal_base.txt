@@ -1,0 +1,10 @@
+2.1:
+	- config_oal.h introduced. Gives the possibility to disable/enable
+	  parts of the OAL.
+
+2.0:
+	- oal_task_t type added to oalp_task.h
+	- pointer to oal_task_t added as the first parameter to oal_task_create
+	- oal_task_delete expects pointer to oal_task_t instead of oal_task_id_t
+	- oal_task_yield function added
+

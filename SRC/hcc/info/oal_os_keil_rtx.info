@@ -1,0 +1,6 @@
+Name: oal_os_keil_rtx
+Version: 1.01
+Release: 2
+Category: Package
+Depends: oal_base
+Description: Abstraction layer for Keil RTX.

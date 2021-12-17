@@ -1,0 +1,5 @@
+1.1:
+  - oal_event_set_int(): isr_evt_set() called instead of os_evt_set()
+
+1.0:
+  - Initial revision

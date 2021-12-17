@@ -1,0 +1,16 @@
+2.3:
+	- return code added to psp_spi_lock and psp_spi_unlock.
+
+2.2:
+	- corrected comments in the template.
+
+2.1:
+	- psp_spi_txrx1 changed to psp_spi_txrx (and can send/receive
+	  more than 1 byte at a time).
+
+1.2:
+	- psp_spi_txrx1 added
+
+1.1:
+	- initial release
+
